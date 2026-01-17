@@ -240,26 +240,26 @@ for path in paths:
     student_id = os.path.splitext(os.path.basename(path))[0]
     students.append(student_id)
 
-    # raw = pd.read_excel(path)
-    # df = standardize_df(raw).dropna(how="all")
+    raw = pd.read_excel(path)
+    df = standardize_df(raw).dropna(how="all")
 
-    xl = pd.read_excel(path)  # dict of {sheet_name: df}
+    # xl = pd.read_excel(path)  # dict of {sheet_name: df}
 
-    best_sheet, df_raw = pick_best_sheet(xl)
-    if df_raw is None:
-        # st.warning(f"Skipping {uploaded_file.name}: couldn't find any sheet with 4 columns (course/day/start/end).")
-        # continue
+    # best_sheet, df_raw = pick_best_sheet(xl)
+    # if df_raw is None:
+    #     # st.warning(f"Skipping {uploaded_file.name}: couldn't find any sheet with 4 columns (course/day/start/end).")
+    #     # continue
 
-        # msg = f"Skipping {getattr(uploaded_file, 'name', str(uploaded_file))}: couldn't find any sheet with 4 columns (course/day/start/end)."
-        # try:
-        #     import streamlit as st
-        #     st.warning(msg)
-        # except Exception:
-        #     print(msg)
-        # continue
+    #     # msg = f"Skipping {getattr(uploaded_file, 'name', str(uploaded_file))}: couldn't find any sheet with 4 columns (course/day/start/end)."
+    #     # try:
+    #     #     import streamlit as st
+    #     #     st.warning(msg)
+    #     # except Exception:
+    #     #     print(msg)
+    #     # continue
 
-        skipped.append(path)
-        continue
+    #     skipped.append(path)
+    #     continue
 
     
     df = standardize_df(df_raw)  # your standardize function (updated below)
