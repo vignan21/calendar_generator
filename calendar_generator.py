@@ -99,6 +99,86 @@ def standardize_df(df: pd.DataFrame) -> pd.DataFrame:
     out.columns = ["course", "day", "start", "end"]
     return out
 
+import pandas as pd
+
+def clean_df(df: pd.DataFrame) -> pd.DataFrame:
+    # Drop fully empty rows/cols and reset
+    df = df.copy()
+    df = df.dropna(axis=0, how="all").dropna(axis=1, how="all")
+    df.columns = [str(c).strip() for c in df.columns]
+    return df.reset_index(drop=True)
+
+def pick_best_sheet(sheet_dict: dict) -> tuple[str | None, pd.DataFrame | None]:
+    """
+    Choose the sheet that most likely contains the timetable.
+    Strategy:
+      - Clean each sheet (drop empty rows/cols)
+      - Score sheets by number of columns (prefer >= 4)
+      - Return the best candidate
+    """
+    best_name = None
+    best_df = None
+    best_score = -1
+
+    for name, df in sheet_dict.items():
+        if df is None:
+            continue
+        df2 = clean_df(df)
+        if df2.shape[1] < 4:
+            continue
+
+        # Prefer sheets whose first few columns look like timetable-ish text
+        score = df2.shape[1]
+        coltext = " ".join([str(c).lower() for c in df2.columns[:6]])
+        if any(k in coltext for k in ["course", "subject", "day", "start", "end", "time"]):
+            score += 10
+
+        if score > best_score:
+            best_score = score
+            best_name = name
+            best_df = df2
+
+    return best_name, best_df
+
+def standardize_df(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Robust standardizer:
+    - cleans empty rows/cols
+    - if headers don't match, uses first 4 columns
+    """
+    df = clean_df(df)
+
+    # If after cleaning we still don't have 4 columns, fail with a clearer message
+    if df.shape[1] < 4:
+        raise ValueError(
+            f"Sheet has only {df.shape[1]} non-empty columns after cleaning; "
+            "need at least 4: course, day, start, end."
+        )
+
+    # Try to detect headers
+    cols = {str(c).strip().lower(): c for c in df.columns}
+
+    def pick(*cands):
+        for c in cands:
+            if c in cols:
+                return cols[c]
+        return None
+
+    c_course = pick("course", "course name", "subject")
+    c_day    = pick("day", "day of the week", "weekday")
+    c_start  = pick("start", "start time", "time from", "from", "time start")
+    c_end    = pick("end", "end time", "time to", "to", "time end")
+
+    if all([c_course, c_day, c_start, c_end]):
+        out = df[[c_course, c_day, c_start, c_end]].copy()
+        out.columns = ["course", "day", "start", "end"]
+        return out
+
+    # Fallback: assume first 4 columns are the timetable
+    out = df.iloc[:, :4].copy()
+    out.columns = ["course", "day", "start", "end"]
+    return out
+
 def to_minutes(t: time) -> int:
     return t.hour * 60 + t.minute
 
@@ -147,8 +227,18 @@ for path in paths:
     student_id = os.path.splitext(os.path.basename(path))[0]
     students.append(student_id)
 
-    raw = pd.read_excel(path)
-    df = standardize_df(raw).dropna(how="all")
+    # raw = pd.read_excel(path)
+    # df = standardize_df(raw).dropna(how="all")
+
+    xl = pd.read_excel(path, sheet_name=None)  # dict of {sheet_name: df}
+
+    best_sheet, df_raw = pick_best_sheet(xl)
+    if df_raw is None:
+        st.warning(f"Skipping {uploaded_file.name}: couldn't find any sheet with 4 columns (course/day/start/end).")
+        continue
+    
+    df = standardize_df(df_raw)  # your standardize function (updated below)
+
 
     df["course"] = df["course"].astype(str).str.strip()
     df["day"] = df["day"].apply(normalize_day)
