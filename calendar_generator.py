@@ -101,33 +101,44 @@ def standardize_df(df: pd.DataFrame) -> pd.DataFrame:
 
 import pandas as pd
 
-def clean_df(df: pd.DataFrame) -> pd.DataFrame:
-    # Drop fully empty rows/cols and reset
-    df = df.copy()
-    df = df.dropna(axis=0, how="all").dropna(axis=1, how="all")
+def clean_df(obj) -> pd.DataFrame:
+    """
+    Ensure we always return a DataFrame with empty rows/cols removed.
+    Handles Series or other odd sheet returns gracefully.
+    """
+    if obj is None:
+        return pd.DataFrame()
+
+    # If it's a Series, convert to a 1-column DataFrame
+    if isinstance(obj, pd.Series):
+        obj = obj.to_frame()
+
+    # If it's not a DataFrame, try converting
+    if not isinstance(obj, pd.DataFrame):
+        try:
+            obj = pd.DataFrame(obj)
+        except Exception:
+            return pd.DataFrame()
+
+    df = obj.copy()
+    df = df.dropna(axis=0, how="all")
+
+    # Only drop empty columns if columns axis exists (DataFrame does)
+    df = df.dropna(axis=1, how="all")
+
+    # Normalize column names
     df.columns = [str(c).strip() for c in df.columns]
+
     return df.reset_index(drop=True)
 
 def pick_best_sheet(sheet_dict: dict) -> tuple[str | None, pd.DataFrame | None]:
-    """
-    Choose the sheet that most likely contains the timetable.
-    Strategy:
-      - Clean each sheet (drop empty rows/cols)
-      - Score sheets by number of columns (prefer >= 4)
-      - Return the best candidate
-    """
-    best_name = None
-    best_df = None
-    best_score = -1
+    best_name, best_df, best_score = None, None, -1
 
-    for name, df in sheet_dict.items():
-        if df is None:
-            continue
-        df2 = clean_df(df)
-        if df2.shape[1] < 4:
+    for name, obj in sheet_dict.items():
+        df2 = clean_df(obj)
+        if df2.empty or df2.shape[1] < 4:
             continue
 
-        # Prefer sheets whose first few columns look like timetable-ish text
         score = df2.shape[1]
         coltext = " ".join([str(c).lower() for c in df2.columns[:6]])
         if any(k in coltext for k in ["course", "subject", "day", "start", "end", "time"]):
