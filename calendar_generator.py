@@ -236,6 +236,7 @@ records = []
 students = []
 
 for path in paths:
+    skipped = []
     student_id = os.path.splitext(os.path.basename(path))[0]
     students.append(student_id)
 
@@ -249,12 +250,15 @@ for path in paths:
         # st.warning(f"Skipping {uploaded_file.name}: couldn't find any sheet with 4 columns (course/day/start/end).")
         # continue
 
-        msg = f"Skipping {getattr(uploaded_file, 'name', str(uploaded_file))}: couldn't find any sheet with 4 columns (course/day/start/end)."
-        try:
-            import streamlit as st
-            st.warning(msg)
-        except Exception:
-            print(msg)
+        # msg = f"Skipping {getattr(uploaded_file, 'name', str(uploaded_file))}: couldn't find any sheet with 4 columns (course/day/start/end)."
+        # try:
+        #     import streamlit as st
+        #     st.warning(msg)
+        # except Exception:
+        #     print(msg)
+        # continue
+
+        skipped.append(uploaded_file.name)
         continue
 
     
