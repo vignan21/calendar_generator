@@ -258,7 +258,7 @@ for path in paths:
         #     print(msg)
         # continue
 
-        skipped.append(uploaded_file.name)
+        skipped.append(path.name)
         continue
 
     
