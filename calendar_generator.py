@@ -246,8 +246,17 @@ for path in paths:
 
     best_sheet, df_raw = pick_best_sheet(xl)
     if df_raw is None:
-        st.warning(f"Skipping {uploaded_file.name}: couldn't find any sheet with 4 columns (course/day/start/end).")
+        # st.warning(f"Skipping {uploaded_file.name}: couldn't find any sheet with 4 columns (course/day/start/end).")
+        # continue
+
+        msg = f"Skipping {getattr(uploaded_file, 'name', str(uploaded_file))}: couldn't find any sheet with 4 columns (course/day/start/end)."
+        try:
+            import streamlit as st
+            st.warning(msg)
+        except Exception:
+            print(msg)
         continue
+
     
     df = standardize_df(df_raw)  # your standardize function (updated below)
 
