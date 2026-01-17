@@ -258,7 +258,7 @@ for path in paths:
         #     print(msg)
         # continue
 
-        skipped.append(path.name)
+        skipped.append(path)
         continue
 
     
