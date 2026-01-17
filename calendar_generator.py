@@ -230,7 +230,7 @@ for path in paths:
     # raw = pd.read_excel(path)
     # df = standardize_df(raw).dropna(how="all")
 
-    xl = pd.read_excel(path, sheet_name=None)  # dict of {sheet_name: df}
+    xl = pd.read_excel(path)  # dict of {sheet_name: df}
 
     best_sheet, df_raw = pick_best_sheet(xl)
     if df_raw is None:
