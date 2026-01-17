@@ -262,7 +262,7 @@ for path in paths:
     #     continue
 
     
-    df = standardize_df(df_raw)  # your standardize function (updated below)
+    # df = standardize_df(df_raw)  # your standardize function (updated below)
 
 
     df["course"] = df["course"].astype(str).str.strip()
