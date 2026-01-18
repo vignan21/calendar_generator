@@ -1,6 +1,6 @@
 # Calendar Generator (Excel → Color-Coded Weekly Matrix)
 
-A small Python + Streamlit web tool that takes **multiple student timetable Excel files** and generates a **single consolidated Excel** in a “matrix calendar” format:
+A Python tool that takes **multiple student timetable Excel files** and generates a **single consolidated Excel** in a “matrix calendar” format:
 
 - **Column A:** Day of the week  
 - **Column B:** Time of the day (slot grid)  
